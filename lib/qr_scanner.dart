@@ -1,47 +1,24 @@
 import 'package:flutter/material.dart';
 import 'package:qr_code_scanner/qr_code_scanner.dart';
-import 'services/ar_service.dart';
 
-void main() {
-  runApp(const MainApp());
-}
-
-class MainApp extends StatelessWidget {
-  const MainApp({Key? key}) : super(key: key);
-
+class QRScanner extends StatefulWidget {
   @override
-  Widget build(BuildContext context) {
-    return MaterialApp(
-      debugShowCheckedModeBanner: false,
-      title: 'QR AR Scanner',
-      theme: ThemeData(
-        primarySwatch: Colors.blue,
-      ),
-      home: QRScannerScreen(),
-    );
-  }
+  _QRScannerState createState() => _QRScannerState();
 }
 
-class QRScannerScreen extends StatefulWidget {
-  @override
-  _QRScannerScreenState createState() => _QRScannerScreenState();
-}
-
-class _QRScannerScreenState extends State<QRScannerScreen> {
+class _QRScannerState extends State<QRScanner> {
   final GlobalKey qrKey = GlobalKey(debugLabel: 'QR');
   QRViewController? controller;
   String scannedResult = 'Place a QR code in front of the camera';
-  final ARService arService = ARService();
 
   @override
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(
-        title: const Text('QR AR Scanner'),
+        title: const Text('QR Scanner'),
       ),
       body: Stack(
         children: [
-          // QR Code Scanner View
           QRView(
             key: qrKey,
             onQRViewCreated: _onQRViewCreated,
@@ -53,7 +30,6 @@ class _QRScannerScreenState extends State<QRScannerScreen> {
               cutOutSize: 250,
             ),
           ),
-          // Text Display for the Scanned Result
           Positioned(
             bottom: 50,
             left: 20,
@@ -76,11 +52,13 @@ class _QRScannerScreenState extends State<QRScannerScreen> {
   void _onQRViewCreated(QRViewController qrController) {
     controller = qrController;
     controller!.scannedDataStream.listen((scanData) {
-      final processedResult = arService.processQRCode(scanData.code);
-      setState(() {
-        scannedResult = processedResult;
-      });
-      print('Scanned Result: $processedResult');
+      final code = scanData.code;
+      if (code != null) {
+        final isValidUrl = code.startsWith('http://') || code.startsWith('https://');
+        setState(() {
+          scannedResult = isValidUrl ? code : 'Invalid URL: $code';
+        });
+      }
     });
   }
 
