@@ -1,6 +1,12 @@
 <manifest xmlns:android="http://schemas.android.com/apk/res/android">
-    <!-- Camera and ARCore permissions -->
+
+    <!-- Permissions for Camera, Internet, and ARCore -->
     <uses-permission android:name="android.permission.CAMERA" />
+    <uses-permission android:name="android.permission.INTERNET" />
+    <uses-permission android:name="android.permission.WRITE_EXTERNAL_STORAGE" />
+    <uses-permission android:name="android.permission.READ_EXTERNAL_STORAGE" />
+
+    <!-- Camera and ARCore features -->
     <uses-feature android:name="android.hardware.camera" />
     <uses-feature android:name="android.hardware.camera.autofocus" />
     <uses-feature android:name="com.google.ar.core" android:required="true" />
@@ -35,10 +41,9 @@
         <meta-data
             android:name="flutterEmbedding"
             android:value="2" />
-
     </application>
 
-    <!-- Required for querying activities that can process text -->
+    <!-- Queries for handling text processing intents -->
     <queries>
         <intent>
             <action android:name="android.intent.action.PROCESS_TEXT"/>
