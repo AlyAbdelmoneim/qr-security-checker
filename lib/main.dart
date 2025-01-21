@@ -1,8 +1,14 @@
 import 'package:flutter/material.dart';
 import 'package:security_checker/screens/home_screen.dart';
+import 'package:security_checker/services/safety_checker.dart';
 
 void main() {
   runApp(const MainApp());
+  // SafetyChecker.checkUrlSafety('https://ay7aga/AlyAbdelmoneim').then((response) {
+  //   if(response == null) print('URL is safe');
+  //   else
+  //   print('URL Safety Check Response: $response');
+  // });
 }
 
 class MainApp extends StatelessWidget {

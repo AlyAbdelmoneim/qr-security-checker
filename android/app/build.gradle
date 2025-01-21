@@ -1,7 +1,6 @@
 plugins {
     id "com.android.application"
     id "kotlin-android"
-    // The Flutter Gradle Plugin must be applied after the Android and Kotlin Gradle plugins.
     id "dev.flutter.flutter-gradle-plugin"
 }
 
@@ -21,27 +20,31 @@ android {
 
     defaultConfig {
         applicationId = "com.example.security_checker"
-        minSdk = 24 // ARCore requires at least API level 24
+        minSdk = 24
         targetSdk = flutter.targetSdkVersion
         versionCode = flutter.versionCode
         versionName = flutter.versionName
     }
 
+    signingConfigs {
+        release {
+            keyAlias 'your-key-alias'
+            keyPassword 'your-key-password'
+            storeFile file('path/to/your/keystore.jks')
+            storePassword 'your-store-password'
+        }
+    }
+
     buildTypes {
         release {
-            signingConfig = signingConfigs.debug
+            signingConfig signingConfigs.release
         }
     }
 
     dependencies {
-        // Add ARCore support
         implementation 'com.google.ar.sceneform.ux:sceneform-ux:1.17.1'
-
-        // Other dependencies you may have
-        // implementation 'com.some.library:library:version'
     }
 }
-
 
 flutter {
     source = "../.."

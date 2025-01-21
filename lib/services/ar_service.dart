@@ -1,27 +1,29 @@
 import 'package:arcore_flutter_plugin/arcore_flutter_plugin.dart';
-import 'package:flutter/material.dart';
 import 'package:vector_math/vector_math_64.dart' as vector;
+import 'dart:ui';
 
 class ARService {
   late ArCoreController arCoreController;
 
-  // Initializes the ARCore Controller
   void onARCreated(ArCoreController controller) {
     arCoreController = controller;
-    arCoreController.onPlaneDetected = (planes) {
-      // Handle AR plane detection
-    };
+
+    // Optionally, add an object on creation
+    addARObject();
   }
 
-  // Load a 3D object into AR
-  void addARObject(ArCoreController controller) {
+  void addARObject() {
     final node = ArCoreNode(
       shape: ArCoreSphere(
+        materials: [ArCoreMaterial(color: const Color.fromRGBO(0, 255, 0, 1))],
         radius: 0.1,
-        materials: [ArCoreMaterial(color: Colors.red)],
       ),
-      position: vector.Vector3(0, 0, -1), // Place in front of the camera
+      position: vector.Vector3(0, 0, -1), // 1 meter in front of the user
     );
-    controller.addArCoreNodeWithAnchor(node);
+    arCoreController.addArCoreNode(node);
+  }
+
+  void dispose() {
+    arCoreController.dispose();
   }
 }
