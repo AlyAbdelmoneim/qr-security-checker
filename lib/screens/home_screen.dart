@@ -9,6 +9,7 @@ class HomeScreen extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    // arService.onARCreated(arService.arCoreController);
     return Scaffold(
       appBar: AppBar(title: const Text("QR Safety Checker")),
       body: Center(
@@ -18,7 +19,7 @@ class HomeScreen extends StatelessWidget {
             Navigator.push(
               context,
               MaterialPageRoute(
-                builder: (context) => AROverlay(controller: arService.arCoreController),
+                builder: (context) => AROverlay(),
               ),
             );
           },
