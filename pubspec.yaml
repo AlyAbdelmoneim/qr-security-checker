@@ -12,13 +12,15 @@ dependencies:
   flutter_overlay_window: ^0.4.5
   flutter_tesseract_ocr: ^0.4.26
   http: ^1.2.2
-  permission_handler: ^11.3.1
+  permission_handler: ^11.3.1  # Handles runtime permissions
   provider: ^6.1.2
   qr_code_scanner: ^1.0.1
   shared_preferences: ^2.3.5
   url_launcher: ^6.3.1
   arcore_flutter_plugin: ^0.1.0
-  
+  google_ml_kit: ^0.11.0       # For ML Kit barcode scanning
+  camera: ^0.11.0+2            # Compatible camera version
+
 dev_dependencies:
   flutter_test:
     sdk: flutter

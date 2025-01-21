@@ -4,7 +4,7 @@ import 'package:flutter/material.dart';
 class AROverlay extends StatefulWidget {
   final ArCoreController? controller;
 
-  AROverlay({Key? key, this.controller}) : super(key: key);
+  const AROverlay({super.key, this.controller});
 
   @override
   _AROverlayState createState() => _AROverlayState();
@@ -32,7 +32,7 @@ class _AROverlayState extends State<AROverlay> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      appBar: AppBar(title: Text("AR Safety Checker")),
+      appBar: AppBar(title: const Text("AR Safety Checker")),
       body: ArCoreView(
         onArCoreViewCreated: _onArCoreViewCreated,
       ),

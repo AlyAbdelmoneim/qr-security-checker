@@ -5,10 +5,12 @@ import 'package:security_checker/widgets/ar_overlay.dart';
 class HomeScreen extends StatelessWidget {
   final ARService arService = ARService();
 
+  HomeScreen({super.key});
+
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      appBar: AppBar(title: Text("QR Safety Checker")),
+      appBar: AppBar(title: const Text("QR Safety Checker")),
       body: Center(
         child: ElevatedButton(
           onPressed: () {
@@ -20,7 +22,7 @@ class HomeScreen extends StatelessWidget {
               ),
             );
           },
-          child: Text("Start AR Scan"),
+          child: const Text("Start AR Scan"),
         ),
       ),
     );
