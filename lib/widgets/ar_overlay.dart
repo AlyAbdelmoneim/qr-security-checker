@@ -1,10 +1,12 @@
-import 'package:ar_flutter_plugin_flutterflow/managers/ar_session_manager.dart';
-import 'package:ar_flutter_plugin_flutterflow/managers/ar_object_manager.dart';
-import 'package:ar_flutter_plugin_flutterflow/managers/ar_anchor_manager.dart';
-import 'package:ar_flutter_plugin_flutterflow/managers/ar_location_manager.dart';
+import 'package:ar_flutter_plugin_flutterflow/datatypes/node_types.dart';
+import 'package:ar_flutter_plugin_flutterflow/models/ar_node.dart';
 import 'package:flutter/material.dart';
 import 'package:qr_code_scanner/qr_code_scanner.dart';
+import 'package:ar_flutter_plugin_flutterflow/managers/ar_session_manager.dart';
+import 'package:ar_flutter_plugin_flutterflow/managers/ar_object_manager.dart';
+import 'package:ar_flutter_plugin_flutterflow/widgets/ar_view.dart';
 import 'package:permission_handler/permission_handler.dart';
+import 'package:vector_math/vector_math_64.dart' as vm;
 import '../services/safety_checker.dart';
 
 class AROverlay extends StatefulWidget {
@@ -14,10 +16,12 @@ class AROverlay extends StatefulWidget {
 
 class _AROverlayState extends State<AROverlay> {
   final GlobalKey qrKey = GlobalKey(debugLabel: 'QRScanner');
-  late ARSessionManager arSessionManager;
-  late ARObjectManager arObjectManager;
   QRViewController? qrController;
-  String scannedResult = 'Point the camera at a QR code';
+  ARSessionManager? arSessionManager;
+  ARObjectManager? arObjectManager;
+  bool showARView = false; // Start with QR scanner
+  String scannedResult = 'Scan a QR code';
+  String objectToDisplay = ''; // Path to the AR object to display
 
   @override
   void initState() {
@@ -27,10 +31,73 @@ class _AROverlayState extends State<AROverlay> {
 
   Future<void> _checkPermissions() async {
     if (await Permission.camera.request().isDenied) {
-      print('Camera permission denied.');
       setState(() {
         scannedResult = 'Camera permission denied';
       });
+    }
+  }
+
+  void _onQRViewCreated(QRViewController controller) {
+    qrController = controller;
+    controller.scannedDataStream.listen((scanData) async {
+      if (scanData.code != null) {
+        setState(() {
+          scannedResult = scanData.code!;
+        });
+        final isSafe = await _validateQRCode(scanData.code!);
+        setState(() {
+          showARView = true;
+          objectToDisplay = isSafe ? 'assets/safe_object.glb' : 'assets/unsafe_object.glb';
+        });
+        qrController?.pauseCamera();
+      }
+    });
+  }
+
+  Future<bool> _validateQRCode(String code) async {
+    final isValidUrl = code.startsWith('http://') || code.startsWith('https://');
+    if (!isValidUrl) {
+      return false;
+    }
+    final safetyResult = await SafetyChecker.checkUrlSafety(code);
+    return safetyResult == 'The URL is safe';
+  }
+
+  void _onARViewCreated(
+      ARSessionManager sessionManager, ARObjectManager objectManager) {
+    arSessionManager = sessionManager;
+    arObjectManager = objectManager;
+
+    sessionManager.onInitialize(
+      showFeaturePoints: true,
+      showPlanes: true,
+      showWorldOrigin: false,
+    );
+    objectManager.onInitialize();
+
+    // Add AR object
+    if (objectToDisplay.isNotEmpty) {
+      _addARObject(objectToDisplay);
+    }
+  }
+
+  Future<void> _addARObject(String uri) async {
+    try {
+      ARNode node = ARNode(
+        type: NodeType.localGLTF2,
+        uri: uri,
+        scale: vm.Vector3(0.5, 0.5, 0.5),
+        position: vm.Vector3(0, -0.5, -1.5),
+        rotation: vm.Vector4(0, 0, 0, 1),
+      );
+      bool? added = await arObjectManager?.addNode(node);
+      if (added == true) {
+        print('Node added successfully.');
+      } else {
+        print('Failed to add node.');
+      }
+    } catch (e) {
+      print('Error adding AR node: $e');
     }
   }
 
@@ -39,31 +106,24 @@ class _AROverlayState extends State<AROverlay> {
     return Scaffold(
       body: Stack(
         children: [
-          // QR Scanner Fullscreen
-          QRView(
-            key: qrKey,
-            onQRViewCreated: _onQRViewCreated,
-            overlay: QrScannerOverlayShape(
-              borderColor: Colors.blue,
-              borderRadius: 10,
-              borderLength: 30,
-              borderWidth: 10,
-              cutOutSize: 300,
-            ),
-          ),
-          // AR Elements Layer
-          Positioned.fill(
-            child: GestureDetector(
-              onTapUp: (details) => _onARTap(details.localPosition),
-              child: Container(
-                color: Colors.transparent,
-                child: CustomPaint(
-                  painter: AROverlayPainter(scannedResult),
-                ),
+          if (!showARView)
+            QRView(
+              key: qrKey,
+              onQRViewCreated: _onQRViewCreated,
+              overlay: QrScannerOverlayShape(
+                borderColor: Colors.blue,
+                borderRadius: 10,
+                borderLength: 30,
+                borderWidth: 10,
+                cutOutSize: 300,
               ),
+            )
+          else
+            ARView(
+              onARViewCreated: (sessionManager, objectManager, anchorManager, locationManager) {
+                _onARViewCreated(sessionManager, objectManager);
+              },
             ),
-          ),
-          // Scanned Result Overlay
           Positioned(
             bottom: 50,
             left: 20,
@@ -83,69 +143,10 @@ class _AROverlayState extends State<AROverlay> {
     );
   }
 
-  void _onQRViewCreated(QRViewController controller) {
-    qrController = controller;
-    controller.scannedDataStream.listen((scanData) async {
-      if (scanData.code != null) {
-        setState(() {
-          scannedResult = scanData.code!;
-        });
-        print('Scanned QR Code: ${scanData.code}');
-
-        // Validate the QR code as a URL
-        final isValidUrl = scanData.code!.startsWith('http://') || scanData.code!.startsWith('https://');
-        if (!isValidUrl) {
-          setState(() {
-            scannedResult = 'Invalid QR code';
-          });
-          return;
-        }
-
-        // Pass the scanned URL to the SafetyChecker
-        final safetyResult = await SafetyChecker.checkUrlSafety(scanData.code!);
-        setState(() {
-          scannedResult = safetyResult ?? 'The URL is safe';
-        });
-      } else {
-        print('No QR code detected.');
-      }
-    });
-  }
-
-  void _onARTap(Offset position) {
-    print('Tapped AR layer at: $position');
-    // Handle AR tap interactions here (if needed)
-  }
-
   @override
   void dispose() {
     qrController?.dispose();
+    arSessionManager?.dispose();
     super.dispose();
-  }
-}
-
-class AROverlayPainter extends CustomPainter {
-  final String result;
-
-  AROverlayPainter(this.result);
-
-  @override
-  void paint(Canvas canvas, Size size) {
-    final textPainter = TextPainter(
-      text: TextSpan(
-        text: result,
-        style: const TextStyle(color: Colors.red, fontSize: 20),
-      ),
-      textDirection: TextDirection.ltr,
-    );
-    textPainter.layout();
-
-    final offset = Offset(size.width / 2 - textPainter.width / 2, size.height / 4);
-    textPainter.paint(canvas, offset);
-  }
-
-  @override
-  bool shouldRepaint(covariant CustomPainter oldDelegate) {
-    return true; // Redraw when result changes
   }
 }

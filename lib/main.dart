@@ -16,7 +16,7 @@ class MainApp extends StatelessWidget {
       theme: ThemeData(
         primarySwatch: Colors.blue,
       ),
-      home: AROverlay(), // Launch the AR Overlay as the main screen
+      home: AROverlay(),
     );
   }
 }

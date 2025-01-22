@@ -1,6 +1,9 @@
 name: security_checker
+
 description: "A new Flutter project."
+
 publish_to: 'none'
+
 version: 0.1.0
 
 environment:
@@ -9,13 +12,14 @@ environment:
 dependencies:
   flutter:
     sdk: flutter
+
   qr_code_scanner:
     path: ./plugins/qr_code_scanner
   ar_flutter_plugin_flutterflow:
-   path: ./plugins/ar_flutter_plugin_flutterflow
+    path: ./plugins/ar_flutter_plugin_flutterflow
   flutter_overlay_window: ^0.4.5
   provider: ^6.1.2
-
+  vector_math: ^2.1.1
   shared_preferences: ^2.3.5
   url_launcher: ^6.3.1
 
@@ -35,3 +39,6 @@ dev_dependencies:
 
 flutter:
   uses-material-design: true
+  assets:
+    - assets/safe_object.glb
+    - assets/unsafe_object.glb
