@@ -37,6 +37,7 @@ class _AROverlayState extends State<AROverlay> {
     qrController = controller;
     controller.scannedDataStream.listen((scanData) async {
       if (scanData.code != null) {
+        qrController?.pauseCamera(); // Pause QR scanner to prevent duplicate scans
         setState(() {
           scannedResult = scanData.code!;
         });
@@ -47,7 +48,6 @@ class _AROverlayState extends State<AROverlay> {
           scannedResult = safetyResult;
           showARView = true; // Switch to AR view
         });
-        qrController?.pauseCamera(); // Pause the QR scanner
       }
     });
   }
@@ -58,28 +58,41 @@ class _AROverlayState extends State<AROverlay> {
   }
 
   void _addCube(bool safe) {
-    final color = safe ? Colors.green : Colors.red; // Set cube color
-    final material = ArCoreMaterial(color: color);
+    try {
+      final color = safe ? Colors.green : Colors.red; // Set cube color
+      final material = ArCoreMaterial(color: color);
 
-    final shape = ArCoreCube(
-      materials: [material],
-      size: vm.Vector3(0.2, 0.2, 0.2), // Cube size
-    );
+      final shape = ArCoreCube(
+        materials: [material],
+        size: vm.Vector3(0.2, 0.2, 0.2), // Cube size
+      );
 
-    final node = ArCoreNode(
-      shape: shape,
-      position: vm.Vector3(0, 0, -1), // Position the cube 1 meter in front of the camera
-    );
+      final node = ArCoreNode(
+        shape: shape,
+        position: vm.Vector3(0, 0, -1), // Position the cube 1 meter in front of the camera
+      );
 
-    arCoreController?.addArCoreNode(node);
+      arCoreController?.addArCoreNode(node);
+      print('AR cube added successfully.');
+    } catch (e) {
+      print('Error adding AR cube: $e');
+    }
   }
 
   void _rescanQRCode() {
-    setState(() {
-      showARView = false; // Switch back to QR scanner
-      scannedResult = 'Scan a QR code';
-    });
-    qrController?.resumeCamera(); // Resume the QR scanner
+    try {
+      // Reset the state and switch back to QR scanner
+      setState(() {
+        showARView = false;
+        scannedResult = 'Scan a QR code';
+        isSafe = false; // Reset safety flag
+      });
+
+      // Resume the QR scanner after switching the view
+      qrController?.resumeCamera();
+    } catch (e) {
+      print('Error during rescan: $e');
+    }
   }
 
   @override
@@ -134,8 +147,12 @@ class _AROverlayState extends State<AROverlay> {
 
   @override
   void dispose() {
-    qrController?.dispose();
-    arCoreController?.dispose();
+    try {
+      qrController?.dispose();
+      arCoreController?.dispose();
+    } catch (e) {
+      print('Error during disposal: $e');
+    }
     super.dispose();
   }
 }
