@@ -1,13 +1,9 @@
-import 'package:ar_flutter_plugin_flutterflow/datatypes/node_types.dart';
-import 'package:ar_flutter_plugin_flutterflow/models/ar_node.dart';
 import 'package:flutter/material.dart';
 import 'package:qr_code_scanner/qr_code_scanner.dart';
-import 'package:ar_flutter_plugin_flutterflow/managers/ar_session_manager.dart';
-import 'package:ar_flutter_plugin_flutterflow/managers/ar_object_manager.dart';
-import 'package:ar_flutter_plugin_flutterflow/widgets/ar_view.dart';
 import 'package:permission_handler/permission_handler.dart';
+import 'package:arcore_flutter_plugin/arcore_flutter_plugin.dart';
 import 'package:vector_math/vector_math_64.dart' as vm;
-import '../services/safety_checker.dart';
+import '../services/safety_checker.dart'; // Import your SafetyChecker class
 
 class AROverlay extends StatefulWidget {
   @override
@@ -17,11 +13,11 @@ class AROverlay extends StatefulWidget {
 class _AROverlayState extends State<AROverlay> {
   final GlobalKey qrKey = GlobalKey(debugLabel: 'QRScanner');
   QRViewController? qrController;
-  ARSessionManager? arSessionManager;
-  ARObjectManager? arObjectManager;
-  bool showARView = false; // Start with QR scanner
+  ArCoreController? arCoreController;
+
+  bool showARView = false; // Toggle between AR view and QR scanner
   String scannedResult = 'Scan a QR code';
-  String objectToDisplay = ''; // Path to the AR object to display
+  bool isSafe = false; // Whether the QR code is "safe"
 
   @override
   void initState() {
@@ -44,61 +40,38 @@ class _AROverlayState extends State<AROverlay> {
         setState(() {
           scannedResult = scanData.code!;
         });
-        final isSafe = await _validateQRCode(scanData.code!);
+        // Use SafetyChecker to validate the QR code
+        String safetyResult = await SafetyChecker.checkUrlSafety(scanData.code!);
         setState(() {
-          showARView = true;
-          objectToDisplay = isSafe ? 'assets/safe_object.glb' : 'assets/unsafe_object.glb';
+          isSafe = safetyResult == 'The URL is safe';
+          scannedResult = safetyResult;
+          showARView = true; // Switch to AR view
         });
-        qrController?.pauseCamera();
+        qrController?.pauseCamera(); // Pause the QR scanner
       }
     });
   }
 
-  Future<bool> _validateQRCode(String code) async {
-    final isValidUrl = code.startsWith('http://') || code.startsWith('https://');
-    if (!isValidUrl) {
-      return false;
-    }
-    final safetyResult = await SafetyChecker.checkUrlSafety(code);
-    return safetyResult == 'The URL is safe';
+  void _onArCoreViewCreated(ArCoreController controller) {
+    arCoreController = controller;
+    _addCube(isSafe); // Add a cube based on the safety result
   }
 
-  void _onARViewCreated(
-      ARSessionManager sessionManager, ARObjectManager objectManager) {
-    arSessionManager = sessionManager;
-    arObjectManager = objectManager;
+  void _addCube(bool safe) {
+    final color = safe ? Colors.green : Colors.red; // Set cube color
+    final material = ArCoreMaterial(color: color);
 
-    sessionManager.onInitialize(
-      showFeaturePoints: true,
-      showPlanes: true,
-      showWorldOrigin: false,
+    final shape = ArCoreCube(
+      materials: [material],
+      size: vm.Vector3(0.2, 0.2, 0.2), // Cube size
     );
-    objectManager.onInitialize();
 
-    // Add AR object
-    if (objectToDisplay.isNotEmpty) {
-      _addARObject(objectToDisplay);
-    }
-  }
+    final node = ArCoreNode(
+      shape: shape,
+      position: vm.Vector3(0, 0, -1), // Position the cube 1 meter in front of the camera
+    );
 
-  Future<void> _addARObject(String uri) async {
-    try {
-      ARNode node = ARNode(
-        type: NodeType.localGLTF2,
-        uri: uri,
-        scale: vm.Vector3(0.5, 0.5, 0.5),
-        position: vm.Vector3(0, -0.5, -1.5),
-        rotation: vm.Vector4(0, 0, 0, 1),
-      );
-      bool? added = await arObjectManager?.addNode(node);
-      if (added == true) {
-        print('Node added successfully.');
-      } else {
-        print('Failed to add node.');
-      }
-    } catch (e) {
-      print('Error adding AR node: $e');
-    }
+    arCoreController?.addArCoreNode(node);
   }
 
   @override
@@ -119,10 +92,8 @@ class _AROverlayState extends State<AROverlay> {
               ),
             )
           else
-            ARView(
-              onARViewCreated: (sessionManager, objectManager, anchorManager, locationManager) {
-                _onARViewCreated(sessionManager, objectManager);
-              },
+            ArCoreView(
+              onArCoreViewCreated: _onArCoreViewCreated,
             ),
           Positioned(
             bottom: 50,
@@ -146,7 +117,7 @@ class _AROverlayState extends State<AROverlay> {
   @override
   void dispose() {
     qrController?.dispose();
-    arSessionManager?.dispose();
+    arCoreController?.dispose();
     super.dispose();
   }
 }
