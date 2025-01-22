@@ -52,11 +52,10 @@ class _QRScannerState extends State<QRScanner> {
   void _onQRViewCreated(QRViewController qrController) {
     controller = qrController;
     controller!.scannedDataStream.listen((scanData) {
-      final code = scanData.code;
-      if (code != null) {
-        final isValidUrl = code.startsWith('http://') || code.startsWith('https://');
+      if (scanData.code != null) {
+        final isValidUrl = scanData.code!.startsWith('http://') || scanData.code!.startsWith('https://');
         setState(() {
-          scannedResult = isValidUrl ? code : 'Invalid URL: $code';
+          scannedResult = isValidUrl ? scanData.code! : 'Invalid URL: ${scanData.code}';
         });
       }
     });
