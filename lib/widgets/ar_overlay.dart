@@ -74,6 +74,14 @@ class _AROverlayState extends State<AROverlay> {
     arCoreController?.addArCoreNode(node);
   }
 
+  void _rescanQRCode() {
+    setState(() {
+      showARView = false; // Switch back to QR scanner
+      scannedResult = 'Scan a QR code';
+    });
+    qrController?.resumeCamera(); // Resume the QR scanner
+  }
+
   @override
   Widget build(BuildContext context) {
     return Scaffold(
@@ -99,14 +107,24 @@ class _AROverlayState extends State<AROverlay> {
             bottom: 50,
             left: 20,
             right: 20,
-            child: Container(
-              padding: const EdgeInsets.all(8.0),
-              color: Colors.black54,
-              child: Text(
-                scannedResult,
-                style: const TextStyle(color: Colors.white, fontSize: 16),
-                textAlign: TextAlign.center,
-              ),
+            child: Column(
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                Container(
+                  padding: const EdgeInsets.all(8.0),
+                  color: Colors.black54,
+                  child: Text(
+                    scannedResult,
+                    style: const TextStyle(color: Colors.white, fontSize: 16),
+                    textAlign: TextAlign.center,
+                  ),
+                ),
+                if (showARView)
+                  ElevatedButton(
+                    onPressed: _rescanQRCode,
+                    child: Text('Rescan QR Code'),
+                  ),
+              ],
             ),
           ),
         ],
