@@ -3,7 +3,7 @@ import 'package:qr_code_scanner/qr_code_scanner.dart';
 import 'package:permission_handler/permission_handler.dart';
 import 'package:arcore_flutter_plugin/arcore_flutter_plugin.dart';
 import 'package:vector_math/vector_math_64.dart' as vm;
-import '../services/safety_checker.dart'; // Import your SafetyChecker class
+import '../screens/safety_checker.dart'; // Import your SafetyChecker class
 
 class AROverlay extends StatefulWidget {
   @override

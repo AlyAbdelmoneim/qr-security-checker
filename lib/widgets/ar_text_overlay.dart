@@ -1,6 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:google_ml_kit/google_ml_kit.dart';
-import '../services/safety_checker.dart';
+import '../screens/safety_checker.dart';
 
 class ARTextOverlay extends StatefulWidget {
   @override

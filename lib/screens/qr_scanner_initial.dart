@@ -1,14 +1,14 @@
 import 'package:flutter/material.dart';
 import 'package:qr_code_scanner/qr_code_scanner.dart';
 
-class QRScannerScreen extends StatefulWidget {
-  const QRScannerScreen({Key? key}) : super(key: key);
+class QRScannerInitial extends StatefulWidget {
+  const QRScannerInitial({Key? key}) : super(key: key);
 
   @override
-  _QRScannerScreenState createState() => _QRScannerScreenState();
+  State<QRScannerInitial> createState() => _QRScannerInitialState();
 }
 
-class _QRScannerScreenState extends State<QRScannerScreen> {
+class _QRScannerInitialState extends State<QRScannerInitial> {
   final GlobalKey qrKey = GlobalKey(debugLabel: 'QRScanner');
   QRViewController? qrController;
 
@@ -22,12 +22,12 @@ class _QRScannerScreenState extends State<QRScannerScreen> {
     qrController = controller;
     controller.scannedDataStream.listen((scanData) {
       if (scanData.code != null) {
-        qrController?.pauseCamera(); // Pause scanning after detecting a QR code
-        Navigator.pushReplacementNamed(
+        Navigator.pushNamed(
           context,
-          '/arScreen',
+          '/arInitial',
           arguments: {'scannedCode': scanData.code},
         );
+        qrController?.dispose();
       }
     });
   }
@@ -35,17 +35,10 @@ class _QRScannerScreenState extends State<QRScannerScreen> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      appBar: AppBar(title: const Text('Scan QR Code')),
+      appBar: AppBar(title: const Text('Initial QR Scanner')),
       body: QRView(
         key: qrKey,
         onQRViewCreated: _onQRViewCreated,
-        overlay: QrScannerOverlayShape(
-          borderColor: Colors.blue,
-          borderRadius: 10,
-          borderLength: 30,
-          borderWidth: 10,
-          cutOutSize: 300,
-        ),
       ),
     );
   }
