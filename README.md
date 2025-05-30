@@ -1,3 +1,3 @@
 # security_checker
 
-A new Flutter project.
+AR qr reader written in flutter that checks how safe qr codes are.
